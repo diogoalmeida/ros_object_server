@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>object_server</name>
+  <version>1.0.0</version>
+  <description>
+    Implements an interactive marker server which enables the user
+    to configure object frames for coordination experiments.
+  </description>
+  <author email="diogoa@kth.se">Diogo Almeida</author>
+  <maintainer email="diogoa@kth.se">Diogo Almeida</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+  <depend>std_srvs</depend>
+  <depend>tf</depend>
+  <depend>interactive_markers</depend>
+</package>
