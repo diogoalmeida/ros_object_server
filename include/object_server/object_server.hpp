@@ -26,7 +26,7 @@ private:
   tf::TransformBroadcaster broadcaster_;
   visualization_msgs::InteractiveMarker obj1_, obj2_;
   geometry_msgs::Pose obj1_pose_, obj2_pose_;
-  std::string obj1_name_, obj2_name_;
+  std::string obj1_name_, obj2_name_, obj1_base_frame_, obj2_base_frame_;
   bool do_update_;
   ros::NodeHandle nh_;
   ros::ServiceServer update_server_;

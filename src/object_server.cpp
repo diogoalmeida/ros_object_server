@@ -5,15 +5,16 @@ ObjectServer::ObjectServer() : do_update_(true), nh_("~")
   server_ = std::make_shared<interactive_markers::InteractiveMarkerServer>("obj_server");
   obj1_name_ = "obj1_marker";
   obj2_name_ = "obj2_marker";
+  obj1_base_frame_ = "left_gripper";
+  obj2_base_frame_ = "right_gripper";
 
   obj1_.scale = 0.1;
-  obj1_.header.frame_id = "left_gripper";
-  obj1_.header.stamp=ros::Time::now();
+  obj1_.header.frame_id = obj1_base_frame_;
   obj1_.name = obj1_name_;
   obj1_.description = "Marker for obj1";
 
   obj2_ = obj1_;
-  obj2_.header.frame_id = "right_gripper";
+  obj2_.header.frame_id = obj2_base_frame_;
   obj2_.name = obj2_name_;
   obj2_.description = "Marker for obj2";
 
@@ -25,6 +26,8 @@ ObjectServer::ObjectServer() : do_update_(true), nh_("~")
   obj2_pose_.orientation.y = 0.0;
   obj2_pose_.orientation.z = 0.0;
   obj2_pose_.orientation.w = 0.707;
+  obj1_.pose = obj1_pose_;
+  obj2_.pose = obj2_pose_;
 
   setupMarker(obj1_);
   setupMarker(obj2_);
@@ -66,8 +69,8 @@ void ObjectServer::runServer()
     obj2_transform.setOrigin(tf::Vector3(obj2_pose_.position.x, obj2_pose_.position.y, obj2_pose_.position.z));
     obj1_transform.setRotation(tf::Quaternion(obj1_pose_.orientation.x, obj1_pose_.orientation.y, obj1_pose_.orientation.z, obj1_pose_.orientation.w));
     obj2_transform.setRotation(tf::Quaternion(obj2_pose_.orientation.x, obj2_pose_.orientation.y, obj2_pose_.orientation.z, obj2_pose_.orientation.w));
-    broadcaster_.sendTransform(tf::StampedTransform(obj1_transform, ros::Time::now(), "left_gripper", "obj1"));
-    broadcaster_.sendTransform(tf::StampedTransform(obj2_transform, ros::Time::now(), "right_gripper", "obj2"));
+    broadcaster_.sendTransform(tf::StampedTransform(obj1_transform, ros::Time::now(), obj1_base_frame_, "obj1"));
+    broadcaster_.sendTransform(tf::StampedTransform(obj2_transform, ros::Time::now(), obj2_base_frame_, "obj2"));
     ros::Duration(0.02).sleep();
     ros::spinOnce();
   }
