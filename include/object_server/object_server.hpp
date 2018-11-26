@@ -9,6 +9,8 @@
 /**
   Sets up fixed transforms for coordinated experiments using interactive markers
   and publishes tf transforms accordingly.
+
+  Markers are loaded from the parameter server during object construction, or dynamically through a service call.
 **/
 class ObjectServer
 {
@@ -22,14 +24,18 @@ public:
   void runServer();
 
 private:
-  std::shared_ptr<interactive_markers::InteractiveMarkerServer> server_;
+  std::map<std::string, std::shared_ptr<interactive_markers::InteractiveMarkerServer> > marker_servers_;
+  std::map<std::string, std::string> parent_frames_;
+  std::map<std::string, geometry_msgs::Pose> object_poses_;
   tf::TransformBroadcaster broadcaster_;
-  visualization_msgs::InteractiveMarker obj1_, obj2_;
-  geometry_msgs::Pose obj1_pose_, obj2_pose_;
-  std::string obj1_name_, obj2_name_, obj1_base_frame_, obj2_base_frame_;
   bool do_update_;
   ros::NodeHandle nh_;
   ros::ServiceServer update_server_;
+
+  /**
+    Loads the initial markers from pre-defined ROS parameters and other server parameters.
+  **/
+  bool init();
 
   /**
     Sets-up an interactive marker for 6-DOF manipulation.

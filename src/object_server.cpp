@@ -2,45 +2,85 @@
 
 ObjectServer::ObjectServer() : do_update_(true), nh_("~")
 {
-  server_ = std::make_shared<interactive_markers::InteractiveMarkerServer>("obj_server");
-  obj1_name_ = "obj1_marker";
-  obj2_name_ = "obj2_marker";
-  obj1_base_frame_ = "left_gripper";
-  obj2_base_frame_ = "right_gripper";
-
-  obj1_.scale = 0.1;
-  obj1_.header.frame_id = obj1_base_frame_;
-  obj1_.name = obj1_name_;
-  obj1_.description = "Marker for obj1";
-
-  obj2_ = obj1_;
-  obj2_.header.frame_id = obj2_base_frame_;
-  obj2_.name = obj2_name_;
-  obj2_.description = "Marker for obj2";
-
-  obj1_pose_.orientation.x = 0.0;
-  obj1_pose_.orientation.y = 0.0;
-  obj1_pose_.orientation.z = 0.0;
-  obj1_pose_.orientation.w = 1.0;
-  obj2_pose_.orientation.x = 0.707;
-  obj2_pose_.orientation.y = 0.0;
-  obj2_pose_.orientation.z = 0.0;
-  obj2_pose_.orientation.w = 0.707;
-  obj1_.pose = obj1_pose_;
-  obj2_.pose = obj2_pose_;
-
-  setupMarker(obj1_);
-  setupMarker(obj2_);
+  if (!init())
+  {
+    throw std::logic_error("Failed to initialize the object server!");
+  }
 
   update_server_ = nh_.advertiseService("obj_marker_update", &ObjectServer::toggleMarkerUpdate, this);
+}
 
-  // add the interactive marker to our collection &
-  // tell the server to call processFeedback() when feedback arrives for it
-  server_->insert(obj1_, boost::bind(&ObjectServer::markerFeedback, this, _1));
-  server_->insert(obj2_, boost::bind(&ObjectServer::markerFeedback, this, _1));
+bool ObjectServer::init()
+{
+  std::vector<std::string> server_names;
 
-  // 'commit' changes and send to all clients
-  server_->applyChanges();
+  if (!nh_.getParam("marker_servers", server_names))
+  {
+    ROS_WARN("No marker_servers parameter available! No marker will be available by default.");
+  }
+  else
+  {
+    for (unsigned int i = 0; i < server_names.size(); i++) // cycle through declared marker_servers and initialize the markers for each server
+    {
+      std::shared_ptr<interactive_markers::InteractiveMarkerServer> new_server = std::make_shared<interactive_markers::InteractiveMarkerServer>(server_names[i]);
+      std::vector<std::string> marker_names;
+      if (!nh_.getParam(server_names[i] + "/marker_names", marker_names))
+      {
+        ROS_ERROR_STREAM("No marker_names parameter configured for " << server_names[i] << "(" << server_names[i] << "/marker_names)");
+        return false;
+      }
+
+      for (unsigned int j = 0; j < marker_names.size(); j++)
+      {
+        visualization_msgs::InteractiveMarker new_marker;
+        std::string ns = server_names[i] + "/" + marker_names[j];
+
+        if (!nh_.getParam(ns + "/parent_frame", new_marker.header.frame_id))
+        {
+          ROS_ERROR_STREAM("Missing " << ns << "/parent_frame parameter!");
+          return false;
+        }
+
+        if (!nh_.getParam(ns + "/name", new_marker.name))
+        {
+          ROS_ERROR_STREAM("Missing " << ns << "/name parameter!");
+          return false;
+        }
+
+        std::vector<double> init_pose;
+        if (!nh_.getParam(ns + "/initial_pose", init_pose))
+        {
+          ROS_ERROR_STREAM("Missing " << ns << "/initial_pose parameter!");
+          return false;
+        }
+
+        if (init_pose.size() != 7)
+        {
+          ROS_ERROR_STREAM(ns << "/initial_pose parameter must have dimension 7 (position + quaternion)");
+          return false;
+        }
+
+        new_marker.pose.position.x = init_pose[0];
+        new_marker.pose.position.y = init_pose[1];
+        new_marker.pose.position.z = init_pose[2];
+        new_marker.pose.orientation.x = init_pose[3];
+        new_marker.pose.orientation.y = init_pose[4];
+        new_marker.pose.orientation.z = init_pose[5];
+        new_marker.pose.orientation.w = init_pose[6];
+        new_marker.scale = 0.1;
+        setupMarker(new_marker);
+
+        parent_frames_[new_marker.name] = new_marker.header.frame_id;
+        object_poses_[new_marker.name] = new_marker.pose;
+        new_server->insert(new_marker, boost::bind(&ObjectServer::markerFeedback, this, _1));
+      }
+
+      new_server->applyChanges();
+      marker_servers_[server_names[i]] = new_server;
+    }
+  }
+
+  return true;
 }
 
 bool ObjectServer::toggleMarkerUpdate(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
@@ -62,15 +102,16 @@ bool ObjectServer::toggleMarkerUpdate(std_srvs::SetBool::Request &req, std_srvs:
 
 void ObjectServer::runServer()
 {
-  tf::Transform obj1_transform, obj2_transform;
+  tf::Transform tf_transform;
   while(ros::ok())
   {
-    obj1_transform.setOrigin(tf::Vector3(obj1_pose_.position.x, obj1_pose_.position.y, obj1_pose_.position.z));
-    obj2_transform.setOrigin(tf::Vector3(obj2_pose_.position.x, obj2_pose_.position.y, obj2_pose_.position.z));
-    obj1_transform.setRotation(tf::Quaternion(obj1_pose_.orientation.x, obj1_pose_.orientation.y, obj1_pose_.orientation.z, obj1_pose_.orientation.w));
-    obj2_transform.setRotation(tf::Quaternion(obj2_pose_.orientation.x, obj2_pose_.orientation.y, obj2_pose_.orientation.z, obj2_pose_.orientation.w));
-    broadcaster_.sendTransform(tf::StampedTransform(obj1_transform, ros::Time::now(), obj1_base_frame_, "obj1"));
-    broadcaster_.sendTransform(tf::StampedTransform(obj2_transform, ros::Time::now(), obj2_base_frame_, "obj2"));
+    for (auto &x : object_poses_)
+    {
+      tf_transform.setOrigin(tf::Vector3(x.second.position.x, x.second.position.y, x.second.position.z));
+      tf_transform.setRotation(tf::Quaternion(x.second.orientation.x, x.second.orientation.y, x.second.orientation.z, x.second.orientation.w));
+      broadcaster_.sendTransform(tf::StampedTransform(tf_transform, ros::Time::now(), parent_frames_[x.first], x.first));
+    }
+
     ros::Duration(0.02).sleep();
     ros::spinOnce();
   }
@@ -80,17 +121,17 @@ void ObjectServer::markerFeedback(const visualization_msgs::InteractiveMarkerFee
 {
   if (!do_update_)
   {
+    ROS_WARN_THROTTLE(10, "Object server is set to paused.");
     return;
   }
 
-  if (feedback->marker_name == obj1_name_)
+  if (object_poses_.find(feedback->marker_name) != object_poses_.end())
   {
-    obj1_pose_ = feedback->pose;
+    object_poses_[feedback->marker_name] = feedback->pose;
   }
-
-  if (feedback->marker_name == obj2_name_)
+  else
   {
-    obj2_pose_ = feedback->pose;
+    ROS_WARN_STREAM("Got marker feedback for unknown marker " << feedback->marker_name);
   }
 }
 
