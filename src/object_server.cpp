@@ -7,7 +7,8 @@ ObjectServer::ObjectServer() : do_update_(true), nh_("~")
     throw std::logic_error("Failed to initialize the object server!");
   }
 
-  update_server_ = nh_.advertiseService("obj_marker_update", &ObjectServer::toggleMarkerUpdate, this);
+  update_server_ = nh_.advertiseService(
+      "obj_marker_update", &ObjectServer::toggleMarkerUpdate, this);
 }
 
 bool ObjectServer::init()
@@ -16,17 +17,25 @@ bool ObjectServer::init()
 
   if (!nh_.getParam("marker_servers", server_names))
   {
-    ROS_WARN("No marker_servers parameter available! No marker will be available by default.");
+    ROS_WARN(
+        "No marker_servers parameter available! No marker will be available by "
+        "default.");
   }
   else
   {
-    for (unsigned int i = 0; i < server_names.size(); i++) // cycle through declared marker_servers and initialize the markers for each server
+    for (unsigned int i = 0; i < server_names.size();
+         i++)  // cycle through declared marker_servers and initialize the
+               // markers for each server
     {
-      std::shared_ptr<interactive_markers::InteractiveMarkerServer> new_server = std::make_shared<interactive_markers::InteractiveMarkerServer>(server_names[i]);
+      std::shared_ptr<interactive_markers::InteractiveMarkerServer> new_server =
+          std::make_shared<interactive_markers::InteractiveMarkerServer>(
+              server_names[i]);
       std::vector<std::string> marker_names;
       if (!nh_.getParam(server_names[i] + "/marker_names", marker_names))
       {
-        ROS_ERROR_STREAM("No marker_names parameter configured for " << server_names[i] << "(" << server_names[i] << "/marker_names)");
+        ROS_ERROR_STREAM("No marker_names parameter configured for "
+                         << server_names[i] << "(" << server_names[i]
+                         << "/marker_names)");
         return false;
       }
 
@@ -56,7 +65,8 @@ bool ObjectServer::init()
 
         if (init_pose.size() != 7)
         {
-          ROS_ERROR_STREAM(ns << "/initial_pose parameter must have dimension 7 (position + quaternion)");
+          ROS_ERROR_STREAM(ns << "/initial_pose parameter must have dimension "
+                                 "7 (position + quaternion)");
           return false;
         }
 
@@ -72,7 +82,8 @@ bool ObjectServer::init()
 
         parent_frames_[new_marker.name] = new_marker.header.frame_id;
         object_poses_[new_marker.name] = new_marker.pose;
-        new_server->insert(new_marker, boost::bind(&ObjectServer::markerFeedback, this, _1));
+        new_server->insert(
+            new_marker, boost::bind(&ObjectServer::markerFeedback, this, _1));
       }
 
       new_server->applyChanges();
@@ -83,7 +94,8 @@ bool ObjectServer::init()
   return true;
 }
 
-bool ObjectServer::toggleMarkerUpdate(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
+bool ObjectServer::toggleMarkerUpdate(std_srvs::SetBool::Request &req,
+                                      std_srvs::SetBool::Response &res)
 {
   do_update_ = req.data;
   res.success = true;
@@ -103,13 +115,17 @@ bool ObjectServer::toggleMarkerUpdate(std_srvs::SetBool::Request &req, std_srvs:
 void ObjectServer::runServer()
 {
   tf::Transform tf_transform;
-  while(ros::ok())
+  while (ros::ok())
   {
     for (auto &x : object_poses_)
     {
-      tf_transform.setOrigin(tf::Vector3(x.second.position.x, x.second.position.y, x.second.position.z));
-      tf_transform.setRotation(tf::Quaternion(x.second.orientation.x, x.second.orientation.y, x.second.orientation.z, x.second.orientation.w));
-      broadcaster_.sendTransform(tf::StampedTransform(tf_transform, ros::Time::now(), parent_frames_[x.first], x.first));
+      tf_transform.setOrigin(tf::Vector3(
+          x.second.position.x, x.second.position.y, x.second.position.z));
+      tf_transform.setRotation(
+          tf::Quaternion(x.second.orientation.x, x.second.orientation.y,
+                         x.second.orientation.z, x.second.orientation.w));
+      broadcaster_.sendTransform(tf::StampedTransform(
+          tf_transform, ros::Time::now(), parent_frames_[x.first], x.first));
     }
 
     ros::Duration(0.02).sleep();
@@ -117,7 +133,8 @@ void ObjectServer::runServer()
   }
 }
 
-void ObjectServer::markerFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
+void ObjectServer::markerFeedback(
+    const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback)
 {
   if (!do_update_)
   {
@@ -131,12 +148,13 @@ void ObjectServer::markerFeedback(const visualization_msgs::InteractiveMarkerFee
   }
   else
   {
-    ROS_WARN_STREAM("Got marker feedback for unknown marker " << feedback->marker_name);
+    ROS_WARN_STREAM("Got marker feedback for unknown marker "
+                    << feedback->marker_name);
   }
 }
 
-
-void ObjectServer::setupMarker(visualization_msgs::InteractiveMarker &marker) const
+void ObjectServer::setupMarker(
+    visualization_msgs::InteractiveMarker &marker) const
 {
   visualization_msgs::Marker box_marker;
   box_marker.type = visualization_msgs::Marker::CUBE;
@@ -150,9 +168,9 @@ void ObjectServer::setupMarker(visualization_msgs::InteractiveMarker &marker) co
 
   visualization_msgs::InteractiveMarkerControl box_control;
   box_control.always_visible = true;
-  box_control.markers.push_back( box_marker );
+  box_control.markers.push_back(box_marker);
 
-  marker.controls.push_back( box_control );
+  marker.controls.push_back(box_control);
 
   visualization_msgs::InteractiveMarkerControl control;
   control.orientation.w = 1;
@@ -160,10 +178,12 @@ void ObjectServer::setupMarker(visualization_msgs::InteractiveMarker &marker) co
   control.orientation.y = 0;
   control.orientation.z = 0;
   control.name = "rotate_x";
-  control.interaction_mode = visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS;
+  control.interaction_mode =
+      visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS;
   marker.controls.push_back(control);
   control.name = "move_x";
-  control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
+  control.interaction_mode =
+      visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
   marker.controls.push_back(control);
 
   control.orientation.w = 1;
@@ -171,10 +191,12 @@ void ObjectServer::setupMarker(visualization_msgs::InteractiveMarker &marker) co
   control.orientation.y = 1;
   control.orientation.z = 0;
   control.name = "rotate_z";
-  control.interaction_mode = visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS;
+  control.interaction_mode =
+      visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS;
   marker.controls.push_back(control);
   control.name = "move_z";
-  control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
+  control.interaction_mode =
+      visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
   marker.controls.push_back(control);
 
   control.orientation.w = 1;
@@ -182,14 +204,16 @@ void ObjectServer::setupMarker(visualization_msgs::InteractiveMarker &marker) co
   control.orientation.y = 0;
   control.orientation.z = 1;
   control.name = "rotate_y";
-  control.interaction_mode = visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS;
+  control.interaction_mode =
+      visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS;
   marker.controls.push_back(control);
   control.name = "move_y";
-  control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
+  control.interaction_mode =
+      visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
   marker.controls.push_back(control);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   ros::init(argc, argv, "object_server");
   ObjectServer server;

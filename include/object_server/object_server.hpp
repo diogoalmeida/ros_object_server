@@ -1,20 +1,21 @@
 #ifndef __OBJECT_SERVER__
 #define __OBJECT_SERVER__
 
-#include <ros/ros.h>
-#include <tf/transform_broadcaster.h>
-#include <std_srvs/SetBool.h>
 #include <interactive_markers/interactive_marker_server.h>
+#include <ros/ros.h>
+#include <std_srvs/SetBool.h>
+#include <tf/transform_broadcaster.h>
 
 /**
   Sets up fixed transforms for coordinated experiments using interactive markers
   and publishes tf transforms accordingly.
 
-  Markers are loaded from the parameter server during object construction, or dynamically through a service call.
+  Markers are loaded from the parameter server during object construction, or
+dynamically through a service call.
 **/
 class ObjectServer
 {
-public:
+ public:
   ObjectServer();
 
   /**
@@ -23,8 +24,10 @@ public:
   **/
   void runServer();
 
-private:
-  std::map<std::string, std::shared_ptr<interactive_markers::InteractiveMarkerServer> > marker_servers_;
+ private:
+  std::map<std::string,
+           std::shared_ptr<interactive_markers::InteractiveMarkerServer> >
+      marker_servers_;
   std::map<std::string, std::string> parent_frames_;
   std::map<std::string, geometry_msgs::Pose> object_poses_;
   tf::TransformBroadcaster broadcaster_;
@@ -33,7 +36,8 @@ private:
   ros::ServiceServer update_server_;
 
   /**
-    Loads the initial markers from pre-defined ROS parameters and other server parameters.
+    Loads the initial markers from pre-defined ROS parameters and other server
+  parameters.
   **/
   bool init();
 
@@ -47,12 +51,14 @@ private:
   /**
     Acquire feedback from the interactive markers
   **/
-  void markerFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void markerFeedback(
+      const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   /**
-    Toggles between updating and not updating the object frames based on the interactive markers
+    Toggles between updating and not updating the object frames based on the
+  interactive markers
   **/
-  bool toggleMarkerUpdate(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
-
+  bool toggleMarkerUpdate(std_srvs::SetBool::Request &req,
+                          std_srvs::SetBool::Response &res);
 };
 #endif
