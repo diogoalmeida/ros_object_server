@@ -7,8 +7,8 @@ ObjectServer::ObjectServer() : do_update_(true), nh_("~")
     throw std::logic_error("Failed to initialize the object server!");
   }
 
-  update_server_ = nh_.advertiseService(
-      "obj_marker_update", &ObjectServer::toggleMarkerUpdate, this);
+  toggle_update_server_ = nh_.advertiseService(
+      "toggle_marker_update", &ObjectServer::toggleMarkerUpdate, this);
 }
 
 bool ObjectServer::init()

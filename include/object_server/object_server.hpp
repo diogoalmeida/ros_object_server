@@ -33,7 +33,7 @@ class ObjectServer
   tf::TransformBroadcaster broadcaster_;
   bool do_update_;
   ros::NodeHandle nh_;
-  ros::ServiceServer update_server_;
+  ros::ServiceServer toggle_update_server_;
 
   /**
     Loads the initial markers from pre-defined ROS parameters and other server
