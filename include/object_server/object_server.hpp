@@ -10,8 +10,7 @@
   Sets up fixed transforms for coordinated experiments using interactive markers
   and publishes tf transforms accordingly.
 
-  Markers are loaded from the parameter server during object construction, or
-dynamically through a service call.
+  Markers are loaded from the parameter server during object construction.
 **/
 class ObjectServer
 {

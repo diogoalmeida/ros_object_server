@@ -1,0 +1,5 @@
+<launch>
+  <node name="object_server" type="object_server" pkg="object_server" output="screen">
+    <rosparam command="load" file="$(find object_server)/config/example.yaml"/>
+  </node>
+</launch>
