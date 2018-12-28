@@ -1,4 +1,4 @@
-ROS Interactive Object Server
+ROS Interactive Object Server ![travis](https://travis-ci.org/diogoalmeida/ros_object_server.svg?branch=master)
 ===
 This package provides functionality to initialize a set of RViz [interactive marker servers](https://wiki.ros.org/rviz/Tutorials/Interactive%20Markers%3A%20Getting%20Started) and markers.
 Each marker will be equipped with 6-DOF controls, allowing the user to set a TF frame by manipulating the controls.
