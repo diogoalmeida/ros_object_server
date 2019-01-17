@@ -46,3 +46,8 @@ $ roslaunch object_server example.launch
 You can now open RViz. Add a TF display, set the fixed_frame to `base_frame` and you can add two `InteractiveMarker` displays, one for the `update_topic: a_server` the other to `another_server`. You should now be able to change the pose of the markers by clicking and dragging on RViz:
 
 ![rviz](rviz.png)
+
+### Services
+Two services are available to the user:
+* ``/object_server/toggle_marker_update``: Sets whether the server will update markers based on the interactive RViz marker.
+* ``/object_server/set_marker_pose``: Allows setting a marker pose
