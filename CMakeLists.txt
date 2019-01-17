@@ -7,10 +7,22 @@ find_package(
   std_srvs
   tf
   interactive_markers
+  message_generation
 )
 
 add_definitions(-std=c++11)
 link_directories(${catkin_LIBRARY_DIRS})
+
+add_service_files (
+FILES
+SetMarkers.srv
+)
+
+generate_messages(
+DEPENDENCIES
+std_msgs
+geometry_msgs
+)
 
 catkin_package(
   CATKIN_DEPENDS roscpp std_srvs tf interactive_markers

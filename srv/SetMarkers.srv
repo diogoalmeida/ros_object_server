@@ -1,0 +1,4 @@
+string[] marker_name
+geometry_msgs/Pose[] marker_pose
+---
+bool[] success

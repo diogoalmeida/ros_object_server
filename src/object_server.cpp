@@ -9,6 +9,8 @@ ObjectServer::ObjectServer() : do_update_(true), nh_("~")
 
   toggle_update_server_ = nh_.advertiseService(
       "toggle_marker_update", &ObjectServer::toggleMarkerUpdate, this);
+  set_pose_server_ = nh_.advertiseService(
+      "set_marker_pose", &ObjectServer::markerPoseService, this);
 }
 
 bool ObjectServer::init()
@@ -107,6 +109,27 @@ bool ObjectServer::toggleMarkerUpdate(std_srvs::SetBool::Request &req,
   else
   {
     res.message = "Stopping marker update";
+  }
+
+  return true;
+}
+
+bool ObjectServer::markerPoseService(object_server::SetMarkers::Request &req,
+                                     object_server::SetMarkers::Response &res)
+{
+  for (unsigned int i = 0; i < req.marker_name.size(); i++)
+  {
+    if (object_poses_.find(req.marker_name[i]) != object_poses_.end())
+    {
+      object_poses_[req.marker_name[i]] = req.marker_pose[i];
+      res.success.push_back(true);
+    }
+    else
+    {
+      ROS_WARN_STREAM("Got marker pose request for unknown marker "
+                      << req.marker_name[i]);
+      res.success.push_back(false);
+    }
   }
 
   return true;

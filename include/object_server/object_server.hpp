@@ -2,6 +2,7 @@
 #define __OBJECT_SERVER__
 
 #include <interactive_markers/interactive_marker_server.h>
+#include <object_server/SetMarkers.h>
 #include <ros/ros.h>
 #include <std_srvs/SetBool.h>
 #include <tf/transform_broadcaster.h>
@@ -32,7 +33,7 @@ class ObjectServer
   tf::TransformBroadcaster broadcaster_;
   bool do_update_;
   ros::NodeHandle nh_;
-  ros::ServiceServer toggle_update_server_;
+  ros::ServiceServer toggle_update_server_, set_pose_server_;
 
   /**
     Loads the initial markers from pre-defined ROS parameters and other server
@@ -59,5 +60,11 @@ class ObjectServer
   **/
   bool toggleMarkerUpdate(std_srvs::SetBool::Request &req,
                           std_srvs::SetBool::Response &res);
+
+  /**
+    Process service request to set markers' poses.
+  **/
+  bool markerPoseService(object_server::SetMarkers::Request &req,
+                         object_server::SetMarkers::Response &res);
 };
 #endif
