@@ -28,6 +28,7 @@ class ObjectServer
   std::map<std::string,
            std::shared_ptr<interactive_markers::InteractiveMarkerServer> >
       marker_servers_;
+  std::map<std::string, std::string> marker_to_server_;
   std::map<std::string, std::string> parent_frames_;
   std::map<std::string, geometry_msgs::Pose> object_poses_;
   tf::TransformBroadcaster broadcaster_;

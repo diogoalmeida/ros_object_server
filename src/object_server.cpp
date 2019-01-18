@@ -86,6 +86,7 @@ bool ObjectServer::init()
         object_poses_[new_marker.name] = new_marker.pose;
         new_server->insert(
             new_marker, boost::bind(&ObjectServer::markerFeedback, this, _1));
+        marker_to_server_[new_marker.name] = server_names[i];
       }
 
       new_server->applyChanges();
@@ -117,11 +118,16 @@ bool ObjectServer::toggleMarkerUpdate(std_srvs::SetBool::Request &req,
 bool ObjectServer::markerPoseService(object_server::SetMarkers::Request &req,
                                      object_server::SetMarkers::Response &res)
 {
+  std::string server_name;
   for (unsigned int i = 0; i < req.marker_name.size(); i++)
   {
     if (object_poses_.find(req.marker_name[i]) != object_poses_.end())
     {
       object_poses_[req.marker_name[i]] = req.marker_pose[i];
+      server_name = marker_to_server_[req.marker_name[i]];
+      marker_servers_[server_name]->setPose(req.marker_name[i],
+                                            req.marker_pose[i]);
+      marker_servers_[server_name]->applyChanges();
       res.success.push_back(true);
     }
     else
