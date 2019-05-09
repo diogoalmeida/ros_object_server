@@ -35,4 +35,4 @@ include_directories(
 
 add_executable(object_server src/object_server.cpp)
 target_link_libraries(object_server ${catkin_LIBRARIES})
-add_dependencies(object_server ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+add_dependencies(object_server ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
