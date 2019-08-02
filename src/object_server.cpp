@@ -157,7 +157,7 @@ void ObjectServer::runServer()
           tf_transform, ros::Time::now(), parent_frames_[x.first], x.first));
     }
 
-    ros::Duration(0.02).sleep();
+    ros::WallDuration(0.02).sleep();
     ros::spinOnce();
   }
 }
